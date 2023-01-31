@@ -1,0 +1,151 @@
+<h3 class="mt-3">Reklama bo'limi</h3>
+
+<!-- Malumot yaratish uchun forma -->
+<div class="row col-md-12 mt-3">
+    <div class="col-md-6 offset-3">
+        <input type="file" class="form-control mt-2" id="team_IMAGE">
+        <button onclick="createData()" type="submit" class="btn btn-primary col-md-12 mt-2">Saqlash</button>
+        <progress id="PROGRESS" class="mt-3  col-md-12" value="0" max="100"></progress>
+    </div>
+</div>
+
+<!-- barcha malumotlar jadvali -->
+<table class="table table-bordered mt-3  table-hover text-center">
+    <thead class="table-dark">
+        <tr>
+            <th style="width: 50%;">Image></th>
+            <th style="width: 10%;">Yaratilgan sana</th>
+            <th style="width: 20%;">Sozlama</th>
+        </tr>
+    </thead>
+    <tbody id="all_data"> </tbody>
+</table>
+
+
+<!-- Malumotni tahrirlash -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="EDIT_DATA" aria-labelledby="EDIT_DATA">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="EDIT_DATA">Tahrirlash</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body GET_DATA">
+
+    </div>
+</div>
+
+
+
+
+
+
+<script src="/axios.min.js"></script>
+<script src="/jquery.min.js"></script>
+<script>
+    const createData = () => {
+
+        const formData = new FormData()
+        const PROGRESS = document.getElementById("PROGRESS")
+        const Image = document.getElementById("team_IMAGE").files[0]
+
+        if (Image == "") {
+            alert("Malumotni kiriting")
+        }
+        else {
+
+            formData.append("image", Image)
+
+            const config = {
+                onUploadProgress: function (event) {
+                    const percentCompleted = Math.round((event.loaded / event.total) * 100)
+                    PROGRESS.value = percentCompleted
+                    if (percentCompleted == 100) {
+                        getAll()
+                    }
+                }
+            }
+            axios.post(`/api/advertisement/create`, formData, config).then((res) => {
+                getAll()
+            })
+        }
+    }
+
+
+    const getAll = () => {
+        axios.get("/api/advertisement/all").then(async (res) => {
+            const data = res.data;
+            const all_data = $("#all_data")
+            await all_data.html("")
+            data.forEach((item, index) => {
+                all_data.append(`
+                    <tr>
+                        <td class="fs-6">
+                            <a target="_blank" href="/images/${item.image}">Fayl</a>
+                        </td>
+                        <td class="fs-6">${new Date(item.date).toLocaleString()}</td>
+                        <td>
+                            <span onclick="getTeam('${item._id}')" data-bs-toggle="offcanvas" href="#EDIT_DATA" role="button" aria-controls="EDIT_DATA" type="button" class="badge bg-success fs-6">Tahrirlash</span>
+                            <span onclick="deleteTeam('${item._id}')" type="button" class="badge bg-danger fs-6">O'chirish</span>
+                        </td>
+                    </tr>
+                `)
+            });
+        })
+    }
+    getAll()
+
+
+    const getAdvertisement = (userID) => {
+        axios.get(`/api/advertisement/${userID}`).then(async (res) => {
+            const data = res.data;
+            const all_data = $(".GET_DATA")
+            await all_data.html("")
+            all_data.append(`
+
+            <div class="row col-md-12 mt-3">
+                <div class="col-md-10 offset-1">                 
+                  <input type="file" class="form-control mt-2" id="update_team_IMAGE">           
+                    <button onclick="updateExisted('${data._id}')" type="submit" class="btn btn-primary col-md-12 mt-2">Saqlash</button>
+                    <progress id="PROGRESS_update" class="mt-3  col-md-12" value="0" max="100"></progress>
+                </div>
+            </div>
+                    
+            `)
+        })
+    }
+    const updateExisted = (userID) => {
+        const IMAGE = document.getElementById("update_team_IMAGE").files[0]
+        const PROGRESS = document.getElementById("PROGRESS_update")
+
+        if (IMAGE == "") {
+            alert("Malumot kiriting")
+        }
+        else {
+
+            const formData = new FormData()
+
+            formData.append("image", IMAGE)
+
+            const config = {
+                onUploadProgress: function (event) {
+                    const percentCompleted = Math.round((event.loaded / event.total) * 100)
+                    PROGRESS.value = percentCompleted
+                    if (percentCompleted == 100) {
+                        getAll()
+                    }
+                }
+            }
+
+            axios.put(`/api/advertisement/${userID}`, formData, config).then((res) => {
+                getAll()
+            })
+        }
+
+    }
+    const deleteAdvertisement = (id) => {
+        axios.delete(`/api/advertisement/${id}`).then((res) => {
+            getAll()
+        })
+    }
+
+
+</script>

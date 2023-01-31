@@ -1,0 +1,181 @@
+<style>
+    #warned {
+        opacity: 0;
+    }
+</style>
+
+<h3 class="mt-3">Yangiliklar bo'limi</h3>
+
+<!-- Malumot yaratish uchun forma -->
+<div class="row col-md-12 mt-3">
+    <div class="col-md-6 offset-3">
+        <input type="text" class="form-control mt-2" id="TITLE" placeholder="Sarlavhani kiriting ... ">
+        <textarea class="form-control mt-2" id="DESCRIPTION" cols="10" rows="10"></textarea>
+        <input type="file" id="FILES" class="form-control mt-2">
+        <input type="text" id="AUTHOR" class="form-control mt-2" placeholder="Muallif kiriting">
+        <select class="form-select mt-2" id="CATEGORIES"></select>
+        <select class="form-select mt-2" id="TAGS"> </select>
+
+        <button onclick="createData()" type="submit" class="btn btn-primary col-md-12 mt-2">Saqlash</button>
+
+        <progress id="PROGRESS" class="mt-3  col-md-12" value="0" max="100"></progress>
+    </div>
+</div>
+
+<!-- barcha malumotlar jadvali -->
+<table class="table table-bordered mt-3  table-hover text-center">
+    <thead class="table-dark">
+        <tr>
+            <th style="width: 20%;">Rasmi</th>
+            <th style="width: 20%;">Sarlavha</th>
+            <th style="width: 20%;">Yaratilgan sana</th>
+            <th style="width: 20%;">Sozlama</th>
+        </tr>
+    </thead>
+    <tbody id="all_data"> </tbody>
+</table>
+<!-- Malumotni tahrirlash -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="EDIT_DATA" aria-labelledby="EDIT_DATA">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="EDIT_DATA">Tahrirlash</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body GET_DATA">
+
+    </div>
+</div>
+
+<script src="/axios.min.js"></script>
+<script src="/jquery.min.js"></script>
+<script>
+
+    axios.get("/api/category/all").then(async (res) => {
+        const data = res.data; // []
+        const setOption = $("#CATEGORIES")
+        await setOption.html("")
+        setOption.append(`<option value="">Kategoriyani tanlang</option>`)
+        data.forEach((item) => {
+            setOption.append(`<option value="${item._id}">${item.name}</option>`)
+        });
+    })
+    axios.get("/api/tag/all").then(async (res) => {
+        const data = res.data; // []
+        const setOption = $("#TAGS")
+        await setOption.html("")
+        setOption.append(`<option value="">Tagni tanlang</option>`)
+        data.forEach((item) => {
+            setOption.append(`<option value="${item._id}">${item.name}</option>`)
+        });
+    })
+
+
+    const createData = () => {
+
+        const formData = new FormData()
+
+        const PROGRESS = document.getElementById("PROGRESS")
+
+        const TITLE = document.getElementById("TITLE").value
+        const DESCRIPTION = document.getElementById("DESCRIPTION").value
+        const AUTHOR = document.getElementById("AUTHOR").value
+        const CATEGORIES = document.getElementById("CATEGORIES").value
+        const TAGS = document.getElementById("TAGS").value
+
+        const FILES_0 = document.getElementById("FILES").files[0]
+        const FILES_1 = document.getElementById("FILES").files[1]
+        const FILES_2 = document.getElementById("FILES").files[2]
+        const FILES_3 = document.getElementById("FILES").files[3]
+        const FILES_4 = document.getElementById("FILES").files[4]
+        const FILES_5 = document.getElementById("FILES").files[5]
+        const FILES_6 = document.getElementById("FILES").files[6]
+        const FILES_7 = document.getElementById("FILES").files[7]
+        const FILES_8 = document.getElementById("FILES").files[8]
+        const FILES_9 = document.getElementById("FILES").files[9]
+        const FILES_10 = document.getElementById("FILES").files[10]
+        const FILES_11 = document.getElementById("FILES").files[11]
+
+
+
+
+        if (
+            TITLE == "" ||
+            DESCRIPTION == "" ||
+            AUTHOR == "" ||
+            CATEGORIES == "" ||
+            TAGS == "" ||
+            FILES_0 == ""
+        ) {
+            alert("Fill up")
+        } else {
+
+            formData.append("title", TITLE)
+            formData.append("description", DESCRIPTION)
+            formData.append("author", AUTHOR)
+            formData.append("category", CATEGORIES)
+            formData.append("tag", TAGS)
+
+            formData.append("image", FILES_0)
+            formData.append("image", FILES_1)
+            formData.append("image", FILES_2)
+            formData.append("image", FILES_3)
+            formData.append("image", FILES_4)
+            formData.append("image", FILES_5)
+            formData.append("image", FILES_6)
+            formData.append("image", FILES_7)
+            formData.append("image", FILES_8)
+            formData.append("image", FILES_9)
+            formData.append("image", FILES_10)
+            formData.append("image", FILES_11)
+
+            const config = {
+                onUploadProgress: function (event) {
+                    const percentCompleted = Math.round((event.loaded / event.total) * 100)
+                    PROGRESS.value = percentCompleted
+                    if (percentCompleted == 100) {
+                        
+                    }
+                }
+            }
+            axios.post(`/api/news/create`, formData, config).then((res) => {
+                window.location.reload()
+            })
+        }
+    }
+
+
+    const getAll = () => {
+        axios.get("/api/news/all").then(async (res) => {
+            const data = res.data; // [{…}, {…}, {…}, {…}, {…}, {…}, {…}]
+            const all_data = $("#all_data")
+            await all_data.html("")
+            data.forEach((item, index) => {
+                all_data.append(`
+                    <tr>
+                        <td class="fs-6">
+                            <img style="width: 70px;" src="/images/${item.image[0]}"  />
+                        </td>
+                        <td class="fs-6">${item.title}</td>
+                        <td class="fs-6">${new Date(item.date).toLocaleString()}</td>
+                        <td>
+                            <span onclick="getNews('${item._id}')" data-bs-toggle="offcanvas" href="#EDIT_DATA" role="button" aria-controls="EDIT_DATA" type="button" class="badge bg-success fs-6">Tahrirlash</span>
+                            <span onclick="deleteNews('${item._id}')" type="button" class="badge bg-danger fs-6">O'chirish</span>
+                        </td>
+                    </tr>
+                `)
+            });
+        })
+    }
+    getAll()
+
+    const deleteNews = (id) => {
+        axios.delete(`/api/news/${id}`).then((res) => {
+            getAll()
+        })
+    }
+
+
+
+
+
+
+</script>
